@@ -7,18 +7,26 @@ phases:
       - cd App
       - echo "Installing dependencies..."
       - npm install
+
   pre_build:
     commands:
       - echo "Preparing for build..."
+
   build:
     commands:
       - echo "Running tests..."
       - npm test || echo "Tests not found, continuing build..."
+
   post_build:
     commands:
       - echo "Build & test phase completed!"
       - echo "Logging in to Docker registry..."
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REPO_URI
+      - echo "Building Docker image..."
+      - docker build -t $ECR_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+      - echo "Pushing Docker image to ECR..."
+      - docker push $ECR_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+
 artifacts:
   files:
     - '**/*'
