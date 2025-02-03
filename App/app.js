@@ -1,60 +1,60 @@
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+const port = 3000;
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
+// Middleware to parse URL-encoded data
+app.use(bodyParser.urlencoded({ extended: true }));
 
-var app = express();
+// In-memory array to store tasks
+let tasks = [];
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', routes);
-app.use('/users', users);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+// Home page to view tasks
+app.get('/', (req, res) => {
+  res.send(`
+    <h1>To-Do List</h1>
+    <ul>
+      ${tasks.map((task, index) => `
+        <li>
+          ${task.completed ? `<strike>${task.text}</strike>` : task.text}
+          <form action="/complete/${index}" method="POST" style="display:inline;">
+            <button type="submit">Mark as completed</button>
+          </form>
+          <form action="/delete/${index}" method="POST" style="display:inline;">
+            <button type="submit">Delete</button>
+          </form>
+        </li>
+      `).join('')}
+    </ul>
+    <form action="/add" method="POST">
+      <input type="text" name="task" placeholder="New task" required>
+      <button type="submit">Add Task</button>
+    </form>
+  `);
 });
 
-// error handlers
-
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
-  app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error', {
-      message: err.message,
-      error: err
-    });
-  });
-}
-
-// production error handler
-// no stacktraces leaked to user
-app.use(function(err, req, res, next) {
-  res.status(err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: {}
-  });
+// Route to add a task
+app.post('/add', (req, res) => {
+  const taskText = req.body.task;
+  tasks.push({ text: taskText, completed: false });
+  res.redirect('/');
 });
 
+// Route to mark a task as completed
+app.post('/complete/:id', (req, res) => {
+  const taskId = req.params.id;
+  tasks[taskId].completed = true;
+  res.redirect('/');
+});
 
-module.exports = app;
+// Route to delete a task
+app.post('/delete/:id', (req, res) => {
+  const taskId = req.params.id;
+  tasks.splice(taskId, 1);
+  res.redirect('/');
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`To-Do app listening at http://localhost:${port}`);
+});
