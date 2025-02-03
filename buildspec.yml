@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     commands:
-      - echo "Navigating to the App directory..."
+      - echo "Navigating to the App directory...."
       - cd App
       - echo "Installing dependencies..."
       - npm install
