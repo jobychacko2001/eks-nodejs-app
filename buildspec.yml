@@ -8,7 +8,7 @@ phases:
       - echo "Installing dependencies..."
       - npm install
       - echo "Installing kubectl..."
-      - curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.14/2024-09-11/bin/linux/amd64/kubectl
+      - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.18.9/2020-11-02/bin/linux/amd64/kubectl
       - chmod +x ./kubectl
       - mv ./kubectl /usr/local/bin/kubectl
       - echo "Configuring AWS CLI for EKS..."
