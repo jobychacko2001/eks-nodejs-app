@@ -1,46 +1,24 @@
 version: 0.2
 
-env:
-  variables:
-    ECR_REPO_URI: "783764617628.dkr.ecr.us-east-1.amazonaws.com/my-private-repository"
-    SECRET_ARN: "arn:aws:secretsmanager:us-east-1:783764617628:secret:DockerCredentials-JqosoL" 
-
 phases:
   install:
-    runtime-versions:
-      nodejs: 18
     commands:
       - echo "Navigating to the App directory..."
       - cd App
       - echo "Installing dependencies..."
       - npm install
-
+  pre_build:
+    commands:
+      - echo "Preparing for build..."
   build:
     commands:
       - echo "Running tests..."
       - npm test || echo "Tests not found, continuing build..."
-
   post_build:
     commands:
       - echo "Build & test phase completed!"
-      
-      
-      - echo "Fetching Docker credentials from Secrets Manager..."
-      - CREDS=$(aws secretsmanager get-secret-value --secret-id $SECRET_ARN --query SecretString --output text)
-      
-     
-      - DOCKER_USERNAME=$(echo $CREDS | cut -d':' -f1)  
-      - DOCKER_PASSWORD=$(echo $CREDS | cut -d':' -f2)  
-      
       - echo "Logging in to Docker registry..."
-      - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin $ECR_REPO_URI
-      
-      - echo "Building Docker image..."
-      - docker build -t my-nodejs-app .
-      - docker tag my-nodejs-app:latest $ECR_REPO_URI:latest
-      - echo "Pushing Docker image to ECR..."
-      - docker push $ECR_REPO_URI:latest
-
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REPO_URI
 artifacts:
   files:
-    - buildspec.yml
+    - '**/*'
