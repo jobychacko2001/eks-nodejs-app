@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     ECR_REPO_URI: "783764617628.dkr.ecr.us-east-1.amazonaws.com/my-private-repository"
-    SECRET_ARN: "arn:aws:secretsmanager:us-east-2:783764617628:secret:DockerCredentials-FVUbII" 
+    SECRET_ARN: "arn:aws:secretsmanager:us-east-1:783764617628:secret:DockerCredentials-JqosoL" 
 
 phases:
   install:
