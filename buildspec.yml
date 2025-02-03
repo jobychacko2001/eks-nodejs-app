@@ -7,6 +7,12 @@ phases:
       - cd App
       - echo "Installing dependencies..."
       - npm install
+      - echo "Installing kubectl..."
+      - curl -LO https://amazon-eks.s3.us-west-2.amazonaws.com/1.18.9/2020-11-13/bin/linux/amd64/kubectl
+      - chmod +x ./kubectl
+      - mv ./kubectl /usr/local/bin/kubectl
+      - echo "Configuring AWS CLI for EKS..."
+      - aws eks --region us-east-1 update-kubeconfig --name private-eks-cluster
 
   pre_build:
     commands:
@@ -16,16 +22,19 @@ phases:
     commands:
       - echo "Running tests..."
       - npm test || echo "Tests not found, continuing build..."
-
-  post_build:
-    commands:
-      - echo "Build & test phase completed!"
       - echo "Logging in to Docker registry..."
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REPO_URI
       - echo "Building Docker image..."
       - docker build -t $ECR_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION .
       - echo "Pushing Docker image to ECR..."
       - docker push $ECR_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+  post_build:
+    commands:
+      - echo "Build & test phase completed!"
+      - echo "Deploying to EKS..."
+      - kubectl apply -f deployment.yaml
+      - kubectl apply -f service.yaml
 
 artifacts:
   files:
