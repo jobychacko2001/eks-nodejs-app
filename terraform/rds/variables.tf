@@ -5,9 +5,9 @@ variable "private_subnet_ids" {
 }
 variable "db_username" {
   description = "RDS username"
-  default     = "admin"
+  default     = ""
 }
 variable "db_password" {
   description = "RDS password"
-  default     = "SuperSecurePassword123!"
+  default     = ""
 }
