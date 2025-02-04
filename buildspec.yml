@@ -9,6 +9,7 @@ phases:
   install:
     commands:
       - echo "Navigating to the App directory...."
+      - kubectl get nodes
       - cd App
       - echo "Installing dependencies..."
       - npm install
@@ -20,11 +21,6 @@ phases:
       - aws eks --region $REGION update-kubeconfig --name $CLUSTER_NAME
       - export KUBECONFIG=/root/.kube/config
       - kubectl config current-context
-      - echo "Copying Kubernetes admin credentials..."
-      - mkdir -p ~/.kube
-      - cp /etc/kubernetes/admin.conf ~/.kube/config
-      - chmod 600 ~/.kube/config
-      - kubectl get nodes
 
   pre_build:
     commands:
