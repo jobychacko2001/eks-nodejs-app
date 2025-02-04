@@ -19,11 +19,7 @@ phases:
       - echo "Checking EKS cluster status..."
       - CLUSTER_STATUS=$(aws eks describe-cluster --name private-eks-cluster --query cluster.status --region us-east-1 --output text)
       - echo "EKS Cluster Status: $CLUSTER_STATUS"
-      - |
-        if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
-          echo "EKS cluster is not active. Exiting..."
-          exit 1
-        fi
+      - - echo "EKS Cluster Status: $CLUSTER_STATUS" && if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then echo "EKS cluster is not active. Exiting..."; exit 1; fi
       - echo "Cluster is active, proceeding with deployment..."
 
   build:
