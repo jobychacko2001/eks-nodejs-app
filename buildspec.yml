@@ -20,13 +20,11 @@ phases:
       - aws eks --region $REGION update-kubeconfig --name $CLUSTER_NAME
       - export KUBECONFIG=/root/.kube/config
       - kubectl config current-context
+      - kubectl get nodes
 
   pre_build:
     commands:
       - echo "Preparing for build..."
-      - export CLUSTER_STATUS=$(aws eks describe-cluster --name $CLUSTER_NAME --query cluster.status --region $REGION --output text)
-      - echo "EKS Cluster Status: $CLUSTER_STATUS"
-      - if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then echo "EKS cluster is not active. Exiting..."; exit 1; fi
 
   build:
     commands:
