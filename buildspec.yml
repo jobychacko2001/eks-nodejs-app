@@ -1,5 +1,10 @@
 version: 0.2
 
+env:
+  variables:
+    CLUSTER_NAME: "private-eks-cluster"
+    REGION: "us-east-1"
+
 phases:
   install:
     commands:
@@ -12,7 +17,9 @@ phases:
       - chmod +x ./kubectl
       - mv ./kubectl /usr/local/bin/kubectl
       - echo "Configuring AWS CLI for EKS..."
-      - aws eks --region us-east-1 update-kubeconfig --name private-eks-cluster
+      - aws eks --region $REGION update-kubeconfig --name $CLUSTER_NAME
+      - export KUBECONFIG=/root/.kube/config
+      - kubectl config current-context
 
   pre_build:
     commands:
@@ -23,7 +30,7 @@ phases:
       - echo "Running tests..."
       - npm test || echo "Tests not found, continuing build..."
       - echo "Logging in to Docker registry..."
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REPO_URI
+      - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_REPO_URI
       - echo "Building Docker image..."
       - docker build -t $ECR_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION .
       - echo "Pushing Docker image to ECR..."
@@ -32,6 +39,8 @@ phases:
   post_build:
     commands:
       - echo "Build & test phase completed!"
+      - echo "Verifying Kubernetes authentication..."
+      - kubectl get nodes  # This will check if authentication is successful
       - echo "Deploying to EKS..."
       - kubectl apply -f k8s/deployment.yaml
       - kubectl apply -f k8s/service.yaml
