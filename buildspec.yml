@@ -1,10 +1,5 @@
 version: 0.2
 
-env:
-  variables:
-    CLUSTER_NAME: "private-eks-cluster"
-    REGION: "us-east-1"
-
 phases:
   install:
     commands:
@@ -17,20 +12,26 @@ phases:
       - chmod +x ./kubectl
       - mv ./kubectl /usr/local/bin/kubectl
       - echo "Configuring AWS CLI for EKS..."
-      - aws eks --region $REGION update-kubeconfig --name $CLUSTER_NAME
-      - export KUBECONFIG=/root/.kube/config
-      - kubectl config current-context
+      - aws eks --region us-east-1 update-kubeconfig --name private-eks-cluster
 
   pre_build:
     commands:
-      - echo "Preparing for build..."
+      - echo "Checking EKS cluster status..."
+      - CLUSTER_STATUS=$(aws eks describe-cluster --name private-eks-cluster --query cluster.status --region us-east-1 --output text)
+      - echo "EKS Cluster Status: $CLUSTER_STATUS"
+      - |
+        if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
+          echo "EKS cluster is not active. Exiting..."
+          exit 1
+        fi
+      - echo "Cluster is active, proceeding with deployment..."
 
   build:
     commands:
       - echo "Running tests..."
       - npm test || echo "Tests not found, continuing build..."
       - echo "Logging in to Docker registry..."
-      - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_REPO_URI
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $ECR_REPO_URI
       - echo "Building Docker image..."
       - docker build -t $ECR_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION .
       - echo "Pushing Docker image to ECR..."
@@ -39,8 +40,6 @@ phases:
   post_build:
     commands:
       - echo "Build & test phase completed!"
-      - echo "Verifying Kubernetes authentication..."
-      - kubectl get nodes
       - echo "Deploying to EKS..."
       - kubectl apply -f k8s/deployment.yaml
       - kubectl apply -f k8s/service.yaml
